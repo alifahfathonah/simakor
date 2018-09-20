@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+
+<script>
+function cart(id1)
+{
+    var id=id1;
+//    alert("enterd "+id);
+    document.getElementById("disp").innerHTML ="sedang melakukan ajax..";
+        $.ajax({
+        url:"http://localhost/p1/ajax.php?s=1-5&idk=27",
+        method:"GET", //First change type to method here
+		contentType: "application/json",
+		dataType: "json",
+		success: function(data) { alert("succsess\n "+data[0]) },
+		error: function(ts) { alert("ini " +ts.responseText) }
+      });
+
+}
+</script>
+<script src="assets/js/jquery.min.js"></script>
+</head>
+<body>
+        <button onclick="cart(4)"> hi </button>
+        <p id="disp"></p>
+</body>
+</html>
