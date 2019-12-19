@@ -15,7 +15,7 @@ include('config.php');
 
 
 define("FBC", "Simakor");
-// error_reporting(0);
+error_reporting(0);
 
 function head($judul = "Simakor", $opsi = 0, $zipbukti = '') {
 	echo '
