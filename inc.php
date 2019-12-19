@@ -15,7 +15,7 @@ include('config.php');
 
 
 define("FBC", "Simakor");
-error_reporting(0);
+// error_reporting(0);
 
 function head($judul = "Simakor", $opsi = 0, $zipbukti = '') {
 	echo '
@@ -81,7 +81,7 @@ function foot($s = 0) {
 }
 
  class database {
- 	private $dbHost, $dbUser, $dbName, $dbPass;
+ 	private $con, $dbHost, $dbUser, $dbName, $dbPass;
 	public	$maksimal_per_halaman = 5,
 			$order_kegiatan = "id",
 			$order_rincian = "uraian",
@@ -98,13 +98,13 @@ function foot($s = 0) {
 	
 	//koneksi MySQL
 	function connectMySQL() {
-		mysql_connect($this->dbHost, $this->dbUser, $this->dbPass);
-		mysql_select_db($this->dbName);
+		$this->con = mysqli_connect($this->dbHost, $this->dbUser, $this->dbPass);
+		mysqli_select_db($this->con, $this->dbName);
 	}
 	
 	//filter masukan ke sql
 	function clean($i) {
-		return htmlentities(mysql_real_escape_string(stripslashes(trim($i))));
+		return htmlentities(mysqli_real_escape_string($this->con, stripslashes(trim($i))));
 	}
 
 	//masuk
@@ -112,7 +112,7 @@ function foot($s = 0) {
 		$u = $this->clean(strtolower($u));
 		$s = MD5($this->clean($s));
 		$query = "SELECT * FROM pengguna WHERE user = '$u' AND sandi='$s'";
-		return mysql_query($query);
+		return mysqli_query($this->con, $query);
 	}
 
 	function teakhir_online($u) {
@@ -120,7 +120,7 @@ function foot($s = 0) {
 		$now = date("Y-m-d-H-i-s");
 		$halaman = $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 		$query = "UPDATE pengguna SET terakhir_online = '$now', halaman_terakhir = '$halaman' WHERE user = '$u'";
-		return mysql_query($query);
+		return mysqli_query($this->con, $query);
 	}
 
 	//menambahkan kegiatan
@@ -131,7 +131,7 @@ function foot($s = 0) {
 		$tanggal = date('Y-m-d');
 		$query = "INSERT INTO kegiatan (id, idp, kegiatan, debit, kredit, saldo, tanggal)
 					VALUES (NULL, '$i', '$k', '0', '0', '0', '$tanggal')";
-		$hasil = mysql_query($query) or $mysql_error = mysql_error();
+		$hasil = mysqli_query($this->con, $query) or $mysqli_error = mysqli_error($this->con);
 		if($hasil) echo '
 		<div class="green-text card grey lighten-4 center-align">
 			Data kegiatan baru untuk <b>'.$k.'</b> berhasil ditambahkan.
@@ -139,7 +139,7 @@ function foot($s = 0) {
 					';
 		else echo '
 		<div class="red-text card grey lighten-4 center-align">
-			Data kegiatan baru gagal ditambahkan.<br>Keterangan: error code [ak01]<br><b>'.$mysql_error.'</b><br>
+			Data kegiatan baru gagal ditambahkan.<br>Keterangan: error code [ak01]<br><b>'.$mysqli_error.'</b><br>
 		</div>
 			';
 	}
@@ -159,19 +159,20 @@ function foot($s = 0) {
 		$tanggal = date('Y-m-d');
 		$query = "INSERT INTO rincian_kegiatan (id, idp, idk, tanggal, uraian, debit, kredit, saldo, bukti)
 					VALUES (NULL, '$idp', '$idk', '$tanggal', '$uraian', '$debit', '$kredit', '$saldo_rincian', 0)";
-		$hasil = mysql_query($query) or $mysql_error = mysql_error(); //query untuk tabel rincian_kegiatan
+		$hasil = mysqli_query($this->con, $query) or $mysqli_error = mysqli_error($this->con); //query untuk tabel rincian_kegiatan
 		if($hasil) {
 			$query = "SELECT * FROM rincian_kegiatan WHERE idk = '$idk' AND idp = '$idp'";
-			$hasil = mysql_query($query) or die(mysql_error());
+			$hasil = mysqli_query($this->con, $query) or die(mysqli_error($this->con));
 			$saldo = 0;
-			while($data = mysql_fetch_array($hasil)) {
+			$no = 0;
+			while($data = mysqli_fetch_array($hasil)) {
 				$no++;
 				$idr = $data['id'];
 				$saldo += ($data['debit'] - abs($data['kredit']));
 				}
 			$query2 = "UPDATE kegiatan SET  debit = '$debit_new', kredit = '$kredit_new', saldo = '$saldo'
 					WHERE id = '$idk' ";
-			$hasil2 = mysql_query($query2) or $mysql_error2 = mysql_error(); //query untuk tabel kegiatan
+			$hasil2 = mysqli_query($this->con, $query2) or $mysqli_error2 = mysqli_error($this->con); //query untuk tabel kegiatan
 			if($hasil2) echo '
 			<div class="green-text card grey lighten-4 center-align">
 				Data rincian kegiatan telah berhasil ditambahkan. [ <a href="'.URL.'rincian.php?idk='.$idk.'">Lihat </a>]
@@ -179,12 +180,12 @@ function foot($s = 0) {
 							';
 				else echo '
 		<div class="red-text card grey lighten-4 center-align">
-			Data rincian kegiatan gagal ditambahkan.<br>Keterangan: error code [ar01]<br><b>'.$mysql_error.'</b>
+			Data rincian kegiatan gagal ditambahkan.<br>Keterangan: error code [ar01]<br><b>'.$mysqli_error.'</b>
 		</div>
 						';
 		} else echo '
 		<div class="red-text card grey lighten-4 center-align">
-			Data rincian kegiatan gagal ditambahkan.<br>Keterangan: error code [ar02]<br><b>'.$mysql_error.'</b>
+			Data rincian kegiatan gagal ditambahkan.<br>Keterangan: error code [ar02]<br><b>'.$mysqli_error.'</b>
 		</div>
 						';
 	}
@@ -194,8 +195,8 @@ function foot($s = 0) {
 		$id = $this->clean($id);
 		$type = $this->clean($type);
 		$query = "SELECT * FROM kegiatan WHERE id = '$id'";
-		$hasil = mysql_query($query);
-		$data = mysql_fetch_array($hasil);
+		$hasil = mysqli_query($this->con, $query);
+		$data = mysqli_fetch_array($hasil);
 		if($type == 'idp') return $data['idp'];
 		else if($type == 'kegiatan') return $data['kegiatan'];
 		else if($type == 'debit') return $data['debit'];
@@ -212,19 +213,19 @@ function foot($s = 0) {
 		$type = $this->clean($type);
 		if($type == 'banyak_rincian') {
 			$query = "SELECT * FROM rincian_kegiatan WHERE idk = '$idk'";
-			$hasil = mysql_query($query);
-			$banyak_rincian = mysql_num_rows($hasil);
+			$hasil = mysqli_query($this->con, $query);
+			$banyak_rincian = mysqli_num_rows($hasil);
 			return $banyak_rincian;
 		} else if($type == 'banyak_bukti') {
 			$banyak_bukti = 0;
 			$query = "SELECT * FROM rincian_kegiatan WHERE idk = '$idk'";
-			$hasil = mysql_query($query);
-			while($data = mysql_fetch_array($hasil)) $banyak_bukti += $data['bukti'];
+			$hasil = mysqli_query($this->con, $query);
+			while($data = mysqli_fetch_array($hasil)) $banyak_bukti += $data['bukti'];
 			return $banyak_bukti;
 		} else {
 			$query = "SELECT * FROM rincian_kegiatan WHERE id = '$id'";
-			$hasil = mysql_query($query);
-			$data = mysql_fetch_array($hasil);
+			$hasil = mysqli_query($this->con, $query);
+			$data = mysqli_fetch_array($hasil);
 			if($type == 'idp') return $data['idp'];
 			else if($type == 'idk') return $data['idk'];
 			else if($type == 'tanggal') return $data['tanggal'];
@@ -241,8 +242,8 @@ function foot($s = 0) {
 	function viewKegiatan($idp, $hal) {
 		$max_hal = $this->maksimal_per_halaman;
 		$query = "SELECT id FROM kegiatan WHERE idp = '$idp'";
-		$hasil = mysql_query($query);
-		$total_data = mysql_num_rows($hasil);
+		$hasil = mysqli_query($this->con, $query);
+		$total_data = mysqli_num_rows($hasil);
 		$total_hal = ceil($total_data/$max_hal);
 		if($hal > $total_hal) $hal = $total_hal;
 		$mulai = ($hal > 1) ? ($hal * $max_hal - $max_hal) : 0;
@@ -281,7 +282,7 @@ function foot($s = 0) {
 			}
 
 		$query = "SELECT * FROM kegiatan WHERE idp = '$idp' ORDER BY kegiatan ASC LIMIT $mulai,$max_hal";
-		$hasil = mysql_query($query);
+		$hasil = mysqli_query($this->con, $query);
 
 			echo '
 		<table class="bordered highlight">
@@ -297,7 +298,7 @@ function foot($s = 0) {
 			</thead>
 			<tbody>
 			';
-			while($data = mysql_fetch_array($hasil)) {
+			while($data = mysqli_fetch_array($hasil)) {
 				$no++;
 				echo '
 				<tr>
@@ -362,12 +363,12 @@ function foot($s = 0) {
 	//menampilkan semua rincian kegiatan
 	function viewRincianKegiatan($idp, $idk, $hal) {
 		$query = "SELECT id FROM rincian_kegiatan WHERE idk = '$idk' AND idp = '$idp'";
-		$hasil = mysql_query($query);
-		$total_data = mysql_num_rows($hasil);
+		$hasil = mysqli_query($this->con, $query);
+		$total_data = mysqli_num_rows($hasil);
 		$no = 0;
 		if($total_data > 0) {
 			$query = "SELECT * FROM rincian_kegiatan WHERE idk = '$idk' AND idp = '$idp' ORDER BY id ASC";
-			$hasil = mysql_query($query) or die(mysql_error());
+			$hasil = mysqli_query($this->con, $query) or die(mysqli_error($this->con));
 
 			echo '
 		<table class="bordered highlight">
@@ -386,7 +387,7 @@ function foot($s = 0) {
 			<tbody>
 			';
 			$saldo = 0;
-			while($data = mysql_fetch_array($hasil)) {
+			while($data = mysqli_fetch_array($hasil)) {
 				$no++;
 				$idr = $data['id'];
 				$saldo += ($data['debit'] - $data['kredit']);
@@ -436,10 +437,10 @@ function foot($s = 0) {
 		$idp = $this->clean($idp);
 		$id = $this->clean($id);
 		$return = "";
-		$query = mysql_query("SELECT * FROM kegiatan WHERE id = '$id' AND idp = '$idp'");
-		$cek = mysql_num_rows($query);
+		$query = mysqli_query($this->con, "SELECT * FROM kegiatan WHERE id = '$id' AND idp = '$idp'");
+		$cek = mysqli_num_rows($query);
 		if(!($cek < 1 || $id == 0)) {
-			$row = mysql_fetch_array($query);
+			$row = mysqli_fetch_array($query);
 			$return = $row['kegiatan'];
 		}
 		return $return;
@@ -453,8 +454,8 @@ function foot($s = 0) {
 		$idp = $this->clean($idp);
 		$id = $this->clean($id);
 		$hal = $this->clean($hal);
-		$query = mysql_query("SELECT kegiatan FROM kegiatan WHERE id = '$id' AND idp = '$idp'");
-		$cek = mysql_num_rows($query);
+		$query = mysqli_query($this->con, "SELECT kegiatan FROM kegiatan WHERE id = '$id' AND idp = '$idp'");
+		$cek = mysqli_num_rows($query);
 		if($cek < 1 || $id == 0) {
 			echo '
 		<div class="red-text card grey lighten-4 center-align">
@@ -463,7 +464,7 @@ function foot($s = 0) {
 		} else {
 				$query = "UPDATE kegiatan SET kegiatan = '$k'
 					WHERE id = '$id' ";
-				$hasil = mysql_query($query) or $mysql_error = mysql_error();
+				$hasil = mysqli_query($this->con, $query) or $mysqli_error = mysqli_error($this->con);
 				if($hasil) echo '
 		<div class="green-text card grey lighten-4 center-align">
 			Data kegiatan <b>'.$ks.'</b> telah berhasil diubah menjadi <b>'.$k.'</b>.
@@ -471,7 +472,7 @@ function foot($s = 0) {
 							';
 				else echo '
 		<div class="red-text card grey lighten-4 center-align">
-			Data kegiatan gagal diubah.<br>Keterangan: error code [uk02]<br /><b>".$mysql_error."</b>
+			Data kegiatan gagal diubah.<br>Keterangan: error code [uk02]<br /><b>".$mysqli_error."</b>
 		</div>
 					';
 		}
@@ -497,19 +498,20 @@ function foot($s = 0) {
 		$tanggal = date('Y-m-d');
 		$query = "UPDATE rincian_kegiatan SET tanggal = '$tanggal', uraian = '$uraian', debit = '$debit', kredit = '$kredit', saldo = '$saldo_rincian'
 					WHERE id = '$id'";
-		$hasil = mysql_query($query) or $mysql_error = mysql_error(); //query untuk tabel rincian_kegiatan
+		$hasil = mysqli_query($this->con, $query) or $mysqli_error = mysqli_error($this->con); //query untuk tabel rincian_kegiatan
 		if($hasil) {
 			$query = "SELECT * FROM rincian_kegiatan WHERE idk = '$idk' AND idp = '$idp'";
-			$hasil = mysql_query($query) or die(mysql_error());
+			$hasil = mysqli_query($this->con, $query) or die(mysqli_error($this->con));
 			$saldo = 0;
-			while($data = mysql_fetch_array($hasil)) {
+			$no = 0;
+			while($data = mysqli_fetch_array($hasil)) {
 				$no++;
 				$idr = $data['id'];
 				$saldo += ($data['debit'] - abs($data['kredit']));
 				}
 			$query2 = "UPDATE kegiatan SET  debit = '$debit_new', kredit = '$kredit_new', saldo = '$saldo'
 					WHERE id = '$idk' ";
-			$hasil2 = mysql_query($query2) or $mysql_error2 = mysql_error(); //query untuk tabel kegiatan
+			$hasil2 = mysqli_query($this->con, $query2) or $mysqli_error2 = mysqli_error($this->con); //query untuk tabel kegiatan
 			if($hasil2) echo '
 			<div class="green-text card grey lighten-4 center-align">
 				Data <b>'.$rs.'</b> telah berhasil diubah menjadi <b>'.$uraian.'</b>.<br />
@@ -519,12 +521,12 @@ function foot($s = 0) {
 							';
 				else echo '
 		<div class="red-text card grey lighten-4 center-align">
-			Data kegiatan gagal diubah.<br>Keterangan: error code [ur01]<br><b>'.$mysql_error2.'</b>
+			Data kegiatan gagal diubah.<br>Keterangan: error code [ur01]<br><b>'.$mysqli_error2.'</b>
 		</div>
 						';
 		} else echo '
 		<div class="red-text card grey lighten-4 center-align">
-			Data kegiatan gagal diubah.<br>Keterangan: error code [ur02]<br><b>'.$mysql_error.'</b>
+			Data kegiatan gagal diubah.<br>Keterangan: error code [ur02]<br><b>'.$mysqli_error.'</b>
 		</div>
 						';
 	}
@@ -550,8 +552,8 @@ function foot($s = 0) {
 		$saldo_new = $debit_new - $kredit_new;
 		$saldo_rincian = $d - $kr;
 		$tanggal = date('Y-m-d');
-		$query = mysql_query("SELECT uraian FROM rincian_kegiatan WHERE id = '$id' AND idp = '$idp' AND idk = '$idk'");
-		$cek = mysql_num_rows($query);
+		$query = mysqli_query("SELECT uraian FROM rincian_kegiatan WHERE id = '$id' AND idp = '$idp' AND idk = '$idk'");
+		$cek = mysqli_num_rows($query);
 		$uraian = $this->lihatRincianKegiatan($id, $idk, "uraian");
 		if($cek < 1) {
 			echo '<div class="error"><br>Error !<br>Nama Kegiatan yang anda pilih tidak terdaftar !<br><br>Keterangan: error code [ur06]<br><br></div>';
@@ -562,19 +564,19 @@ function foot($s = 0) {
 				WHERE id = '$id' ";
 			$query2 = "UPDATE kegiatan SET  debit = '$debit_new', kredit = '$kredit_new', saldo = '$saldo_new'
 				WHERE id = '$idk' ";
-			$hasil = mysql_query($query) or $mysql_error = mysql_error(); //query untuk tabel rincian_kegiatan
-			$hasil2 = mysql_query($query2) or $mysql_error = mysql_error(); //query untuk tabel kegiatan
+			$hasil = mysqli_query($this->con, $query) or $mysqli_error = mysqli_error($this->con); //query untuk tabel rincian_kegiatan
+			$hasil2 = mysqli_query($this->con, $query2) or $mysqli_error = mysqli_error($this->con); //query untuk tabel kegiatan
 			if($hasil2)	if($hasil) 	echo "<div class=\"sukses\"><br>Data rincian kegiatan <br><b>$uraian</b><br> telah disimpan tanpa perubahan uraian.<br><br></div>";
-			else echo "<div class=\"error\"><br>Data kegiatan gagal diubah.<br>Keterangan: error code [ur03]<br><b>".$mysql_error."</b><br><br></div>";
+			else echo "<div class=\"error\"><br>Data kegiatan gagal diubah.<br>Keterangan: error code [ur03]<br><b>".$mysqli_error."</b><br><br></div>";
 		} else {
 				$query = "UPDATE rincian_kegiatan SET uraian = '$u', debit = '$d', kredit = '$kr', saldo = '$saldo_rincian'
 					WHERE id = '$id' ";
 				$query2 = "UPDATE kegiatan SET  debit = '$debit_new', kredit = '$kredit_new', saldo = '$saldo_new'
 					WHERE id = '$idk' ";
-				$hasil = mysql_query($query) or $mysql_error = mysql_error(); //query untuk tabel rincian_kegiatan
-				$hasil2 = mysql_query($query2) or $mysql_error = mysql_error(); //query untuk tabel kegiatan
+				$hasil = mysqli_query($this->con, $query) or $mysqli_error = mysqli_error($this->con); //query untuk tabel rincian_kegiatan
+				$hasil2 = mysqli_query($this->con, $query2) or $mysqli_error = mysqli_error($this->con); //query untuk tabel kegiatan
 				if($hasil2) if($hasil) echo "<div class=\"sukses\"><br>Data rincian kegiatan:<br> <b>$uraian <br>telah berhasil diubah menjadi <br><b>$u</b>.<br><br><br></div>";
-				else echo "<div class=\"error\"><br>Data kegiatan gagal diubah.<br>Keterangan: error code [ur02]<br><b>".$mysql_error."</b><br><br></div>";
+				else echo "<div class=\"error\"><br>Data kegiatan gagal diubah.<br>Keterangan: error code [ur02]<br><b>".$mysqli_error."</b><br><br></div>";
 		}
 	}
 	*/
@@ -585,8 +587,8 @@ function foot($s = 0) {
 		$id = $this->clean($id);
 		$final = $this->clean($final);
 		$hal = $this->clean($hal);
-		$query = mysql_query("SELECT kegiatan FROM kegiatan WHERE id = '$id' AND idp = '$idp'");
-		$cek = mysql_num_rows($query);
+		$query = mysqli_query($this->con, "SELECT kegiatan FROM kegiatan WHERE id = '$id' AND idp = '$idp'");
+		$cek = mysqli_num_rows($query);
 		if($cek < 1 || $id == 0) {
 			echo '
 		<div class="red-text card grey lighten-4 center-align">
@@ -597,7 +599,7 @@ function foot($s = 0) {
 			if($final == 1) {
 				$kegiatan = $this->lihatKegiatan($id, "kegiatan");
 				$query = "DELETE FROM kegiatan WHERE id = '$id' ";
-				$hasil = mysql_query($query) or $mysql_error = mysql_error();
+				$hasil = mysqli_query($this->con, $query) or $mysqli_error = mysqli_error($this->con);
 				if($hasil) echo '
 		<div class="green-text card grey lighten-4 center-align">
 			Data kegiatan <b>'.$kegiatan.'</b> telah berhasil dihapus.
@@ -609,7 +611,7 @@ function foot($s = 0) {
 		</div>
 						';
 			} else {
-				$row = mysql_fetch_array($query);
+				$row = mysqli_fetch_array($query);
 				echo '
 		<a class="waves-effect waves-light btn modal-trigger hide" id="hapus_modal" href="#hapus_konfirmasi">Hapus</a>
 		<div id="hapus_konfirmasi" class="modal">
@@ -641,8 +643,8 @@ function foot($s = 0) {
 		$id = $this->clean($id);
 		$final = $this->clean($final);
 		$hal = $this->clean($hal);
-		$query = mysql_query("SELECT * FROM rincian_kegiatan WHERE id = '$id' AND idk = '$idk' AND idp = '$idp'");
-		$cek = mysql_num_rows($query);
+		$query = mysqli_query($this->con, "SELECT * FROM rincian_kegiatan WHERE id = '$id' AND idk = '$idk' AND idp = '$idp'");
+		$cek = mysqli_num_rows($query);
 		if($cek < 1 || $id == 0) {
 			echo '
 		<div class="red-text card grey lighten-4 center-align">
@@ -652,17 +654,17 @@ function foot($s = 0) {
 		} else {
 			if($final == 1) {
 			//notif ketika rincian kegiatan benar-benar dihapus
-				$row = mysql_fetch_array($query); // row dari tabel rincian_kegiatan
-				$query2 = mysql_query("SELECT * FROM kegiatan WHERE id = '$idk' AND idp = '$idp'");
-				$row2 = mysql_fetch_array($query2); // row dari tabel kegiatan
+				$row = mysqli_fetch_array($query); // row dari tabel rincian_kegiatan
+				$query2 = mysqli_query($this->con, "SELECT * FROM kegiatan WHERE id = '$idk' AND idp = '$idp'");
+				$row2 = mysqli_fetch_array($query2); // row dari tabel kegiatan
 				$uraian = $row["uraian"];
 				$debit_new = $row2["debit"] - $row["debit"];
 				$kredit_new = $row2["kredit"] - $row["kredit"];
 				$saldo_new = $debit_new - $kredit_new;
 				$query3 = "UPDATE kegiatan SET  debit = '$debit_new', kredit = '$kredit_new', saldo = '$saldo_new' WHERE id = '$idk'";
 				$query4 = "DELETE FROM rincian_kegiatan WHERE id = '$id' ";
-				$hasil3 = mysql_query($query3) or $mysql_error3 = mysql_error();
-				$hasil4 = mysql_query($query4) or $mysql_error4 = mysql_error();
+				$hasil3 = mysqli_query($this->con, $query3) or $mysqli_error3 = mysqli_error($this->con);
+				$hasil4 = mysqli_query($this->con, $query4) or $mysqli_error4 = mysqli_error($this->con);
 				if($hasil3) {
 					if($hasil4) echo '
 		<div class="green-text card grey lighten-4 center-align">
@@ -675,20 +677,20 @@ function foot($s = 0) {
 								';
 					else echo '
 		<div class="red-text card grey lighten-4 center-align">
-			Data rincian kegiatan gagal dihapus.<br>Keterangan: error code [dr01]<br><b>'.$mysql_error4.'</b>
+			Data rincian kegiatan gagal dihapus.<br>Keterangan: error code [dr01]<br><b>'.$mysqli_error4.'</b>
 		</div>
 						';
 				} else {
 					echo '
 		<div class="red-text card grey lighten-4 center-align">
-			Data rincian kegiatan gagal dihapus.<br>Keterangan: error code [dr02]<br><b>'.$mysql_error3.'</b>
+			Data rincian kegiatan gagal dihapus.<br>Keterangan: error code [dr02]<br><b>'.$mysqli_error3.'</b>
 		</div>
 						';
 					
 					}
 			} else {
 			//notif konfirmasi ketika akan menghapus rincian kegiatan
-				$row = mysql_fetch_array($query);
+				$row = mysqli_fetch_array($query);
 				echo '
 		<a class="waves-effect waves-light btn modal-trigger hide" id="hapus_modal" href="#hapus_konfirmasi">Hapus</a>
 		<div id="hapus_konfirmasi" class="modal">

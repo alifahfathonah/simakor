@@ -63,11 +63,11 @@ head($nama, $idk); //fungsi head di inc.php, berisi tag html <head> ... </head><
         }
 
         if (empty($errors)) {
-			$mysql_error = '';
+			$mysqli_error = '';
         	if(file_exists($uploadPath)) unlink($uploadPath);//memastikan jmlah bukti di mysql bertambah jika foto juga bertambah dalam dir
             $didUpload = move_uploaded_file($fileTmpName, $uploadPath);
 			$query = "UPDATE rincian_kegiatan SET bukti = 1 WHERE id = '$idr' AND idk = '$idk' AND idp = '$idp'";
-			$hasil = mysql_query($query) or $errors[] = mysql_error(); //query untuk tabel rincian_kegiatan
+			$hasil = mysqli_query($this->con, $query) or $errors[] = mysqli_error($this->con); //query untuk tabel rincian_kegiatan
 
             if ($didUpload && $hasil) {
                 $berhasil = file_exists($uploadPath).' Foto <b>'.basename($fileName).'.'.$fileExtension.'</b> [<i>'.$fs.' '.$byte.'</i>] berhasil diunggah sebagai bukti keuangan.';

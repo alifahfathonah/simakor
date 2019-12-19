@@ -56,15 +56,15 @@ echo '
 <?php
 if($idk == 0) {
 		$query = "SELECT id FROM kegiatan WHERE idp = '$idp'";
-		$hasil = mysql_query($query);
-		$total_data = mysql_num_rows($hasil);
+		$hasil = mysqli_query($this->con, $query);
+		$total_data = mysqli_num_rows($hasil);
 		if($total_data > 0) {
 			$no = 0;
 			$total_saldo = 0;
 			$total_debit = 0;
 			$total_kredit = 0;
 			$query = "SELECT * FROM kegiatan WHERE idp = '$idp' ORDER BY $db->order_kegiatan $db->sort_kegiatan";
-			$hasil = mysql_query($query);
+			$hasil = mysqli_query($this->con, $query);
 
 			echo '
 		<tr>
@@ -75,7 +75,7 @@ if($idk == 0) {
 			<th>Saldo (Rp)</th>
 		</tr>
 			';
-			while($data = mysql_fetch_array($hasil)) {
+			while($data = mysqli_fetch_array($hasil)) {
 				$no++;
 				$total_saldo += $data['saldo'];
 				$total_debit += $data['debit'];
@@ -106,15 +106,15 @@ if($idk == 0) {
 							';
 } else {
 		$query = "SELECT id FROM rincian_kegiatan WHERE idk = '$idk' AND idp = '$idp'";
-		$hasil = mysql_query($query);
-		$total_data = mysql_num_rows($hasil);
+		$hasil = mysqli_query($this->con, $query);
+		$total_data = mysqli_num_rows($hasil);
 		if($total_data > 0) {
 			$no = 0;
 			$total_saldo = 0;
 			$total_debit = 0;
 			$total_kredit = 0;
 			$query = "SELECT * FROM rincian_kegiatan WHERE idk = '$idk' AND idp = '$idp' ORDER BY $db->order_rincian $db->sort_rincian";
-			$hasil = mysql_query($query) or die(mysql_error());
+			$hasil = mysqli_query($this->con, $query) or die(mysqli_error($this->con));
 
 			echo '
 		<tr>
@@ -127,7 +127,7 @@ if($idk == 0) {
 			<th>Saldo (Rp)</th>
 		</tr>
 			';
-			while($data = mysql_fetch_array($hasil)) {
+			while($data = mysqli_fetch_array($hasil)) {
 				$no++;
 				$total_saldo += $data['saldo'];
 				$total_debit += $data['debit'];

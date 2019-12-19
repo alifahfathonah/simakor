@@ -32,7 +32,7 @@ if(isset($_POST['tambah']) || isset($_POST['tambahkan'])) {
 <?php
 if(isset($_POST['tambahkan'])) {
 	$kegiatan = $_POST['kegiatan'];
-	$cek = mysql_num_rows(mysql_query("SELECT id FROM kegiatan WHERE kegiatan = '$kegiatan'"));
+	$cek = mysqli_num_rows(mysqli_query($this->con, "SELECT id FROM kegiatan WHERE kegiatan = '$kegiatan'"));
 	if($cek > 0) {
 	//notif ketika kegiatan error ditambahkan
 		echo '
@@ -187,7 +187,7 @@ if(isset($_POST['tambahkan'])) {
 		<div class="green-text card grey lighten-4 center-align"><br>Data kegiatan <b>'.$kegiatan.'</b> telah disimpan tanpa perubahan.<br><br></div>
 			';
 		} else {
-			$cek = mysql_num_rows(mysql_query("SELECT id FROM kegiatan WHERE kegiatan = BINARY '$kegiatan'"));
+			$cek = mysqli_num_rows(mysqli_query($this->con, "SELECT id FROM kegiatan WHERE kegiatan = BINARY '$kegiatan'"));
 			if($cek > 0) {
 			//notif kegiatan pernah ditambahkan
 				echo '

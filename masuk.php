@@ -40,8 +40,8 @@ if(isset($_POST['masuk'])) {
 	$err = 0;
 	$terakhir_online = date("Y-m-d-H-i-s");
 	$login = $db->masuk($user, $sandi);
-	$cek=mysql_num_rows($login);
-	$row = mysql_fetch_array($login);
+	$cek=mysqli_num_rows($login);
+	$row = mysqli_fetch_array($login);
 	if ($cek> 0) {
 		//aksi jika login berhasil
 		$idp = $row['id'];
@@ -50,7 +50,7 @@ if(isset($_POST['masuk'])) {
 		$_SESSION['user'] = $row['user'];
 		$_SESSION['status'] = 'login';
 		$_SESSION['terakhir_online'] = $terakhir_online;
-		$query = mysql_query("UPDATE pengguna SET terakhir_online = '$terakhir_online' WHERE id = '$idp'");
+		$query = mysqli_query($this->con, "UPDATE pengguna SET terakhir_online = '$terakhir_online' WHERE id = '$idp'");
 		header('location:index.php');
 	} else {
 		//notif jika login gagal

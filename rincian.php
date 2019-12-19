@@ -71,13 +71,13 @@ echo '
                 <br />
 			</div>
 			<div class="col s12 input-field">
-				<input type="number" name="debit" id="debit" class="validate tooltipped" data-position="right" data-delay="100" data-tooltip="Isikan jumlah pemasukan atau debit dana" onkeypress="return isNumberKey(event)/>
+				<input type="number" name="debit" id="debit" class="validate tooltipped" data-position="right" data-delay="100" data-tooltip="Isikan jumlah pemasukan atau debit dana" onkeypress="return isNumberKey(event)"/>
 				<label for="debit"><i class="material-icons">add</i> Debit</label>
                 <p class="red-text hide" id="labelDebit"></p>
                 <br />
 			</div>
 			<div class="col s12 input-field">
-				<input type="number" name="kredit" id="kredit" class="validate tooltipped" data-position="right" data-delay="100" data-tooltip="Isikan jumlah pengeluaran atau kredit dana" onkeypress="return isNumberKey(event)/>
+				<input type="number" name="kredit" id="kredit" class="validate tooltipped" data-position="right" data-delay="100" data-tooltip="Isikan jumlah pengeluaran atau kredit dana" onkeypress="return isNumberKey(event)"/>
 				<label for="kredit"><i class="material-icons">remove</i> Kredit</label>
                 <p class="red-tex hide" id="labelKredit"></p>
                 <br />
@@ -177,12 +177,12 @@ echo '
                 <br />
 			</div>
 			<div class="col s12 input-field inline"><i class="material-icons">add</i> Debit
-				<input type="number" name="debit" id="debit" class="validate tooltipped" data-position="right" data-delay="100" data-tooltip="Isikan jumlah pemasukan atau debit dana" value="<?php echo $debit; ?>" onkeypress="return isNumberKey(event)/>
+				<input type="number" name="debit" id="debit" class="validate tooltipped" data-position="right" data-delay="100" data-tooltip="Isikan jumlah pemasukan atau debit dana" value="<?php echo $debit; ?>" onkeypress="return isNumberKey(event)"/>
                 <p class="red-text hide" id="labelDebit"></p>
                 <br />
 			</div>
 			<div class="col s12 input-field inline"><i class="material-icons">remove</i> Kredit
-				<input type="number" name="kredit" id="kredit" class="validate tooltipped" data-position="right" data-delay="100" data-tooltip="Isikan jumlah pengeluaran atau kredit dana" value="<?php echo $kredit; ?>" onkeypress="return isNumberKey(event)/>
+				<input type="number" name="kredit" id="kredit" class="validate tooltipped" data-position="right" data-delay="100" data-tooltip="Isikan jumlah pengeluaran atau kredit dana" value="<?php echo $kredit; ?>" onkeypress="return isNumberKey(event)"/>
                 <p class="red-tex hide" id="labelKredit"></p>
                 <br />
 			</div>
@@ -287,7 +287,7 @@ if(isset($_POST['ubahBtn'])) {
 		</div>
 		';
 		} else {
-			$cek = mysql_num_rows(mysql_query("SELECT id FROM rincian_kegiatan WHERE uraian = BINARY '$rincian' AND idk = '$idk'"));
+			$cek = mysqli_num_rows(mysqli_query($this->con, "SELECT id FROM rincian_kegiatan WHERE uraian = BINARY '$rincian' AND idk = '$idk'"));
 			//notif kegiatan berhasil ditambahkan
 				$db->updateRincianKegiatan3($idp, $id_kegiatan, $id_rincian, $uraian, $debit, $kredit, $rincian_sebelum, $debit_sebelum, $kredit_sebelum, $hal);
 		}

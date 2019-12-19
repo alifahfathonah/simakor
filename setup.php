@@ -29,8 +29,8 @@ if(isset($_POST['daftar'])) {
 	$tanggal = date('Y-m-d');
 	$terakhir_online = date('Y-m-d-H-i-s');
 	$err = 0;
-	$cek = mysql_num_rows(mysql_query("SELECT * FROM pengguna WHERE user = '$user'"));
-	$cek2 = mysql_num_rows(mysql_query("SELECT * FROM pengguna WHERE email = '$email'"));
+	$cek = mysqli_num_rows(mysqli_query($this->con, "SELECT * FROM pengguna WHERE user = '$user'"));
+	$cek2 = mysqli_num_rows(mysqli_query($this->con, "SELECT * FROM pengguna WHERE email = '$email'"));
 	if($cek > 0) {
 		echo '
 		<div class="red-text  card grey lighten-4 center-align">
@@ -47,7 +47,7 @@ if(isset($_POST['daftar'])) {
 	//menambahkan pengguna
 		$query = "INSERT INTO pengguna (id, nama, user, email, sandi, tanggal, terakhir_online, halaman_terakhir)
 					VALUES (NULL, '$nama', '$user', '$email', '$sandi', '$tanggal', '$terakhir_online', '')";
-		$hasil = mysql_query($query) or $mysql_error = mysql_error();
+		$hasil = mysqli_query($this->con, $query) or $mysqli_error = mysqli_error($this->con);
 		if($hasil) {
 			echo '
 		<div class="green-text card grey lighten-4 center-align">
@@ -64,7 +64,7 @@ if(isset($_POST['daftar'])) {
 		} else {
 			echo '
 		<div class="red-text card grey lighten-4 center-align">
-			<i class="material-icons tiny">error</i> Data pengguna baru gagal ditambahkan.<br />Keterangan: error code [ap01]<br /><b>'.$mysql_error.'</b><br>
+			<i class="material-icons tiny">error</i> Data pengguna baru gagal ditambahkan.<br />Keterangan: error code [ap01]<br /><b>'.$mysqli_error.'</b><br>
 		</div>
 			';}
 	}
